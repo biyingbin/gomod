@@ -9,19 +9,20 @@ import (
 
 var clusterClient *redis.ClusterClient
 
-func main() {
+func t() {
 
 	wait := sync.WaitGroup{}
 
 	wait.Add(50)
 
 	go func() {
+
 		// 连接redis集群
 		client := redis.NewClusterClient(&redis.ClusterOptions{
 			Addrs: []string{ // 填写master主机
-				"172.16.1.2:7000",
+				//"172.16.1.2:7000",
 				"172.16.1.2:7001",
-				"172.16.1.2:7002",
+				//"172.16.1.2:7002",
 			},
 			Password:     "",               // 设置密码
 			DialTimeout:  50 * time.Second, // 设置连接超时
