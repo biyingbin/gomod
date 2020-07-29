@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"github.com/kevburnsjr/bloomfilter"
 	"io"
-	"io/ioutil"
 	"os"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 )
@@ -15,71 +16,84 @@ func TestRand1(t *testing.T) {
 
 	num := 110000000
 
-	m, k := bloomfilter.EstimateParameters(num, 0.0000001)
-	bf := bloomfilter.New(m, k)
+	//m, k := bloomfilter.EstimateParameters(num, 0.0000001)
+	//bf := bloomfilter.New(m, k)
+	//
+	//for i := 0; i < num; i++ {
+	//	str1 := "hello,bloom filter!" + strconv.Itoa(i)
+	//	bf.Add([]byte(str1))
+	//}
+	//
+	//fmt.Println(binary.Size(bf))
+	//
+	//fmt.Println(bf.Test([]byte("bar")))
+	//
+	//dst, _ := os.Create("/Users/byb/Downloads/bloom.data")
+	//
+	//dst.Write(bf.ToBytes())
 
-	dst, _ := os.Create("/Users/byb/Downloads/bloom.data")
+	open, _ := os.Open("/Users/byb/Downloads/bloom.data")
+	stat, _ := open.Stat()
 
-	dst.Write(bf.ToBytes())
+	bt := make([]byte, stat.Size())
 
-	fileInfoList, _ := ioutil.ReadDir("/home/datacenter/tmp/wplocserver")
+	open.Read(bt)
+	fmt.Println(len(bt))
+	open.Close()
 
-	for f := range fileInfoList {
-		filepath := "/home/datacenter/tmp/wplocserver/" + fileInfoList[f].Name()
-		file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
-		if err != nil {
-			fmt.Println("Open file error!", err)
-			return
-		}
-		defer file.Close()
+	_, k1 := bloomfilter.EstimateParameters(num, 0.0000001)
+	fmt.Println("dlajfakljfklsjflkjslkdj")
+	fmt.Println(k1)
+	fmt.Println("dlajfakljfklsjflkjslkdj")
+	bf1 := bloomfilter.NewFromBytes(bt, k1)
 
-		stat, err := file.Stat()
-		if err != nil {
-			panic(err)
-		}
+	bt = nil
 
-		var size = stat.Size()
-		fmt.Println("file size=", size)
+	fmt.Println(bf1.Test([]byte("92626952067511\tCMCC-XS3a")))
+	fmt.Println(bf1.Test([]byte("220152333415537\t金泉宾馆5楼33")))
 
-		buf := bufio.NewReader(file)
-		for {
-			line, err := buf.ReadString('\n')
-			//line = strings.TrimSpace(line)
+	fmt.Println("======================")
 
-			for i := 0; i < num; i++ {
-				bf.Add([]byte(line))
+	var matex sync.Mutex
+	for i := 0; i < 10; i++ {
+		go func() {
+			filepath := "/Users/byb/Downloads/bloom_test_data.txt"
+			file, err := os.OpenFile(filepath, os.O_RDWR, 0666)
+			if err != nil {
+				fmt.Println("Open file error!", err)
+				return
 			}
 
-			if err != nil {
-				if err == io.EOF {
-					fmt.Println("File read ok!")
-					break
-				} else {
-					fmt.Println("Read file error!", err)
-					return
+			buf := bufio.NewReader(file)
+
+			s := time.Now()
+			fmt.Println("s================")
+			for {
+				line, err := buf.ReadString('\n')
+				line = strings.TrimSpace(line)
+				matex.Lock()
+				test := bf1.Test([]byte(line))
+				matex.Unlock()
+				if !test {
+					fmt.Println(line)
+				}
+
+				if err != nil {
+					if err == io.EOF {
+						fmt.Println("File read ok!")
+						break
+					} else {
+						fmt.Println("Read file error!", err)
+						return
+					}
 				}
 			}
-		}
 
+			fmt.Println("e================")
+			fmt.Println(time.Now().Sub(s).Seconds())
+		}()
 	}
 
-	//open, _ := os.Open("/Users/byb/Downloads/bloom.data")
-	//stat, _ := open.Stat()
-	//
-	//bt := make([]byte, stat.Size())
-	//
-	//open.Read(bt)
-	//fmt.Println(len(bt))
-	//open.Close()
-	//
-	//_, k1 := bloomfilter.EstimateParameters(num, 0.0000001)
-	//bf1 := bloomfilter.NewFromBytes(bt, k1)
-	//
-	//bt = nil
-	//
-	//fmt.Println(bf1.Test([]byte("bar")))
-	//fmt.Println(bf1.Test([]byte("sbar")))
-	//
 	//for i := 0; i < num; i++ {
 	//	str1 := "hello,bloom filter!" + strconv.Itoa(i)
 	//	test := bf1.Test([]byte(str1))

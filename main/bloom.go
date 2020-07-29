@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -49,7 +50,7 @@ func funcName(dir string, num int, bf *bloomfilter.BloomFilter) {
 		buf := bufio.NewReader(file)
 		for {
 			line, err := buf.ReadString('\n')
-			//line = strings.TrimSpace(line)
+			line = strings.TrimSpace(line)
 			bf.Add([]byte(line))
 
 			if err != nil {
