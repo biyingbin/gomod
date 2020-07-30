@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-func main() {
+func main1() {
 
 	num := 110000000
 

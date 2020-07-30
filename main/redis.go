@@ -9,7 +9,9 @@ import (
 
 var clusterClient *redis.ClusterClient
 
-func t() {
+func main() {
+
+	fmt.Println("==================")
 
 	wait := sync.WaitGroup{}
 
